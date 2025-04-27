@@ -24,6 +24,11 @@ export async function drawPattern(settings: DrawingSettings, options: DrawOption
 
   let minX = x, maxX = x, minY = y, maxY = y;
 
+  // --- Set stroke color based on theme --- 
+  const isDarkMode = document.documentElement.classList.contains('dark');
+  ctx.strokeStyle = isDarkMode ? 'white' : 'black';
+  // --- End Set stroke color --- 
+
   // Determine angle step calculation
   let getAngleStep: ((index: number) => number) | undefined;
   if (mode === AngleMode.Fraction && typeof angleValue === 'number') {
@@ -52,6 +57,8 @@ export async function drawPattern(settings: DrawingSettings, options: DrawOption
     ctx.scale(scaleFactor, scaleFactor);
     ctx.translate(-patternCenterX, -patternCenterY);
 
+    // Set color again after transform, just in case state was lost
+    ctx.strokeStyle = isDarkMode ? 'white' : 'black'; 
     ctx.globalAlpha = 0.25;
     ctx.beginPath();
     ctx.moveTo(x, y);
