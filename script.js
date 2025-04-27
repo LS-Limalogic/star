@@ -46,8 +46,8 @@ drawBtn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, functi
         return;
     }
     const angleStep = (1 - anglePi) * Math.PI;
-    let x = cssWidth / 2;
-    let y = cssHeight / 2;
+    let x = cssWidth / 4;
+    let y = cssHeight / 4;
     let currentAngle = 0;
     ctx.beginPath();
     ctx.moveTo(x, y);
