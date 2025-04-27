@@ -36,6 +36,7 @@ const lengthInput = document.getElementById('length');
 const delayInput = document.getElementById('delay');
 const drawBtn = document.getElementById('draw-btn');
 const resetBtn = document.getElementById('reset-btn');
+const downloadBtn = document.getElementById('download-btn');
 // --- Constants ---
 const DEFAULT_DELAY_MS = 50;
 const MARGIN = 20; // Margin around the drawing
@@ -276,6 +277,18 @@ resetBtn.addEventListener('click', () => {
     linesInput.value = '20'; // Keep default visible
     lengthInput.value = '400'; // Keep default visible
     delayInput.value = String(DEFAULT_DELAY_MS);
+});
+downloadBtn.addEventListener('click', () => {
+    // Use the canvas element directly (we have it already)
+    const dataURL = canvas.toDataURL('image/png');
+    // Create a temporary link element
+    const link = document.createElement('a');
+    link.href = dataURL;
+    link.download = 'line_pattern.png'; // Set the desired filename
+    // Programmatically click the link to trigger the download
+    document.body.appendChild(link); // Link needs to be in the DOM to be clickable in some browsers
+    link.click();
+    document.body.removeChild(link); // Clean up the temporary link
 });
 // --- Add Enter key listener to inputs ---
 const inputs = [angleInput, linesInput, lengthInput, delayInput];
