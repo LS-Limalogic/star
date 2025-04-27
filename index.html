@@ -38,7 +38,18 @@
     <button id="draw-btn">Draw</button>
     <button id="reset-btn">Reset</button>
     <button id="download-btn">Download PNG</button>
+    <button id="save-settings-btn">Save Current Settings</button>
   </div>
+
+  <div id="saved-settings-controls" style="margin-top: 15px; margin-bottom: 10px;">
+    <label for="saved-settings-list">Saved Settings:</label>
+    <select id="saved-settings-list" style="min-width: 200px; margin-right: 5px;">
+      <option value="">-- Select a saved setting --</option>
+      <!-- Options will be populated by JS -->
+    </select>
+    <button id="delete-selected-btn" disabled>Delete Selected</button>
+  </div>
+
   <canvas id="canvas" width="1000" height="1000" style="border:1px solid #000;"></canvas>
 
   <div id="key-info" style="margin-top: 10px; font-size: 0.9em; color: #555;">

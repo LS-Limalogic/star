@@ -1,11 +1,12 @@
 import { AngleMode, DEFAULT_DELAY_MS } from './config.js';
-import { DrawingSettings, DrawingBounds, StoredSettings } from './types.js';
+import { DrawingSettings, DrawingBounds, StoredSettings, NamedSetting } from './types.js';
 import { degToRad } from './utils.js';
 import { 
     angleModeFractionRadio, angleModeListRadio,
     angleLabel, angleInput, 
     linesInput, lengthInput, delayInput, 
-    ctx, cssWidth, cssHeight
+    ctx, cssWidth, cssHeight,
+    savedSettingsList, deleteSelectedBtn
 } from './dom.js';
 
 export function updateAngleInputLabel() {
@@ -113,4 +114,31 @@ export function applyStoredSettings(settings: StoredSettings): void {
     linesInput.value = settings.lines;
     lengthInput.value = settings.length;
     delayInput.value = settings.delay;
+}
+
+export function populateSavedSettingsList(savedSettings: NamedSetting[]): void {
+    savedSettingsList.options.length = 1; 
+
+    if (savedSettings.length === 0) {
+        savedSettingsList.disabled = true;
+        deleteSelectedBtn.disabled = true;
+        return;
+    }
+
+    savedSettingsList.disabled = false;
+    
+    savedSettings.forEach(setting => {
+        const option = document.createElement('option');
+        option.value = String(setting.id);
+        option.textContent = setting.name;
+        savedSettingsList.appendChild(option);
+    });
+
+    // Update delete button state based on current selection
+    const updateDeleteButtonState = () => {
+        const selectedValue = savedSettingsList.value;
+        deleteSelectedBtn.disabled = selectedValue === "";
+    };
+
+    updateDeleteButtonState(); // Set initial state
 } 

@@ -38,5 +38,8 @@ export const delayInput = getElementByIdOrThrow<HTMLInputElement>('delay');
 export const drawBtn = getElementByIdOrThrow<HTMLButtonElement>('draw-btn');
 export const resetBtn = getElementByIdOrThrow<HTMLButtonElement>('reset-btn');
 export const downloadBtn = getElementByIdOrThrow<HTMLButtonElement>('download-btn');
+export const saveSettingsBtn = getElementByIdOrThrow<HTMLButtonElement>('save-settings-btn');
+export const savedSettingsList = getElementByIdOrThrow<HTMLSelectElement>('saved-settings-list');
+export const deleteSelectedBtn = getElementByIdOrThrow<HTMLButtonElement>('delete-selected-btn');
 
 export const allInputElements = [angleInput, linesInput, lengthInput, delayInput]; 

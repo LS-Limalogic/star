@@ -24,11 +24,18 @@ export interface DrawOptions {
   bounds?: DrawingBounds;
 }
 
-// Interface for the raw data stored in localStorage
+// Represents the actual input values
 export interface StoredSettings {
-  mode: string; // Store mode value ('fraction' or 'list')
+  mode: AngleMode | string; // Allow string during parse, validate later
   angle: string;
   lines: string;
   length: string;
   delay: string;
+}
+
+// Represents a snapshot saved by the user
+export interface NamedSetting {
+  id: number; // Timestamp as unique ID
+  name: string; // Display name (e.g., timestamp string)
+  settings: StoredSettings;
 } 
