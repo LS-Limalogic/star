@@ -4,7 +4,10 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "build": "tsc",
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview",
+    "tsc:check": "tsc --noEmit",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],
@@ -12,6 +15,8 @@
   "license": "ISC",
   "packageManager": "pnpm@10.9.0",
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "http-server": "^14.1.1",
+    "typescript": "^5.8.3",
+    "vite": "^6.3.3"
   }
 }

@@ -1,8 +1,15 @@
 {
   "compilerOptions": {
     "target": "ES6",
+    "module": "ESNext",
+    "moduleResolution": "node",
     "strict": true,
-    "outFile": "script.js"
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "skipLibCheck": true,
+    "isolatedModules": true,
+    "noEmit": true
   },
-  "include": ["script.ts"]
+  "include": ["src/**/*.ts"],
+  "exclude": ["node_modules"]
 }
