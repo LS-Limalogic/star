@@ -26,52 +26,89 @@ if (ctx) {
     ctx.scale(dpr, dpr);
 }
 // --- End High-DPI Scaling ---
+// --- DOM Elements ---
 const angleInput = document.getElementById('angle');
 const linesInput = document.getElementById('lines');
 const lengthInput = document.getElementById('length');
 const delayInput = document.getElementById('delay');
 const drawBtn = document.getElementById('draw-btn');
 const resetBtn = document.getElementById('reset-btn');
-if (!ctx) {
-    throw new Error('Canvas rendering context not available');
-}
-// Helper function for delay
+// --- Constants ---
+const DEFAULT_DELAY_MS = 50;
+// --- Utility Functions ---
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
-drawBtn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, function* () {
-    ctx.clearRect(0, 0, cssWidth, cssHeight);
-    // Set line transparency (25% transparent = 75% opaque)
-    ctx.globalAlpha = 0.25;
+function getAndValidateSettings() {
     const angleValue = parseFloat(angleInput.value);
     const lines = parseInt(linesInput.value, 10);
     const length = parseFloat(lengthInput.value);
     const delayMs = parseInt(delayInput.value, 10);
     if (isNaN(angleValue) || isNaN(lines) || isNaN(length) || angleValue === 0 || isNaN(delayMs) || delayMs < 0) {
         alert('Please enter valid numbers for angle (non-zero), lines, length, and delay (non-negative).');
-        return;
+        return null;
     }
-    const angleStep = Math.PI - ((2 * Math.PI) / angleValue);
-    let x = cssWidth / 4;
-    let y = cssHeight / 2;
-    let currentAngle = 0;
-    ctx.beginPath();
-    ctx.moveTo(x, y);
-    for (let i = 0; i < lines; i++) {
-        x += length * Math.cos(currentAngle);
-        y += length * Math.sin(currentAngle);
-        ctx.lineTo(x, y);
-        currentAngle += angleStep;
-        ctx.stroke();
+    return {
+        angleValue,
+        lines,
+        length,
+        delayMs,
+        startX: cssWidth / 4, // Initial position remains configurable here if needed
+        startY: cssHeight / 2,
+    };
+}
+function drawPattern(ctx, settings) {
+    return __awaiter(this, void 0, void 0, function* () {
+        const { angleValue, lines, length, delayMs, startX, startY } = settings;
+        const angleStep = Math.PI - ((2 * Math.PI) / angleValue);
+        let x = startX;
+        let y = startY;
+        let currentAngle = 0;
+        ctx.clearRect(0, 0, cssWidth, cssHeight); // Clear canvas at the start of drawing
+        ctx.globalAlpha = 0.25; // Set transparency
         ctx.beginPath();
         ctx.moveTo(x, y);
-        yield delay(delayMs);
+        for (let i = 0; i < lines; i++) {
+            x += length * Math.cos(currentAngle);
+            y += length * Math.sin(currentAngle);
+            ctx.lineTo(x, y);
+            currentAngle += angleStep;
+            ctx.stroke();
+            ctx.beginPath(); // Start new path for the next segment to allow delay visibility
+            ctx.moveTo(x, y);
+            yield delay(delayMs);
+        }
+        ctx.globalAlpha = 1.0; // Reset alpha
+    });
+}
+// --- Event Listeners ---
+if (!ctx) {
+    throw new Error('Canvas rendering context not available');
+}
+drawBtn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, function* () {
+    const settings = getAndValidateSettings();
+    if (settings && ctx) {
+        // Disable button while drawing?
+        drawBtn.disabled = true;
+        yield drawPattern(ctx, settings);
+        drawBtn.disabled = false;
     }
-    // Reset alpha to default (optional, good practice)
-    ctx.globalAlpha = 1.0;
 }));
 resetBtn.addEventListener('click', () => {
+    if (!ctx)
+        return;
     ctx.clearRect(0, 0, cssWidth, cssHeight);
+    // Reset inputs to defaults (Consider setting defaults directly in HTML or TS)
     angleInput.value = '';
-    linesInput.value = '';
-    lengthInput.value = '';
-    delayInput.value = '50';
+    linesInput.value = '20'; // Keep default visible
+    lengthInput.value = '400'; // Keep default visible
+    delayInput.value = String(DEFAULT_DELAY_MS);
+});
+// --- Add Enter key listener to inputs ---
+const inputs = [angleInput, linesInput, lengthInput, delayInput];
+inputs.forEach(input => {
+    input.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter') {
+            event.preventDefault(); // Prevent default form submission if applicable
+            drawBtn.click(); // Simulate click on the draw button
+        }
+    });
 });
