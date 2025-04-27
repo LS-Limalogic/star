@@ -2,7 +2,8 @@ import {
     canvas, ctx, angleModeFractionRadio, angleModeListRadio,
     drawBtn, resetBtn, downloadBtn, allInputElements,
     angleInput, linesInput, lengthInput, delayInput,
-    cssWidth, cssHeight, saveSettingsBtn, savedSettingsList, deleteSelectedBtn // Remove loadSelectedBtn
+    cssWidth, cssHeight, saveSettingsBtn, savedSettingsList, deleteSelectedBtn,
+    themeToggleBtn // <-- Add theme toggle button
 } from './dom.js';
 import {
     updateAngleInputLabel, getAndValidateSettings, resetInputs,
@@ -18,6 +19,29 @@ import { format } from 'date-fns'; // Import format from date-fns
 
 // --- Global State (Keep track of loaded settings) ---
 let allSavedSettings: NamedSetting[] = [];
+
+// --- Theme Setup ---
+const applyTheme = (theme: 'light' | 'dark') => {
+    const root = document.documentElement;
+    if (theme === 'dark') {
+        root.classList.remove('light'); // Remove light
+        root.classList.add('dark');
+    } else {
+        root.classList.remove('dark'); // Remove dark
+        root.classList.add('light');
+    }
+    localStorage.setItem('theme', theme);
+};
+
+// Check initial theme preference
+const savedTheme = localStorage.getItem('theme');
+//const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: light)').matches;
+
+if (savedTheme === 'dark' || (!savedTheme)) {
+    applyTheme('dark');
+} else {
+    applyTheme('light'); // Explicitly set light if no preference or saved light
+}
 
 // --- Initial Setup ---
 if (!ctx) {
@@ -39,6 +63,12 @@ console.log("Loaded saved settings list:", allSavedSettings);
 updateAngleInputLabel();
 
 // --- Event Listeners ---
+
+// Theme Toggle Button
+themeToggleBtn.addEventListener('click', () => {
+    const isDark = document.documentElement.classList.contains('dark');
+    applyTheme(isDark ? 'light' : 'dark');
+});
 
 // Mode change
 angleModeFractionRadio.addEventListener('change', updateAngleInputLabel);

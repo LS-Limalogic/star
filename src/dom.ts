@@ -41,5 +41,6 @@ export const downloadBtn = getElementByIdOrThrow<HTMLButtonElement>('download-bt
 export const saveSettingsBtn = getElementByIdOrThrow<HTMLButtonElement>('save-settings-btn');
 export const savedSettingsList = getElementByIdOrThrow<HTMLSelectElement>('saved-settings-list');
 export const deleteSelectedBtn = getElementByIdOrThrow<HTMLButtonElement>('delete-selected-btn');
+export const themeToggleBtn = getElementByIdOrThrow<HTMLButtonElement>('theme-toggle');
 
 export const allInputElements = [angleInput, linesInput, lengthInput, delayInput]; 
