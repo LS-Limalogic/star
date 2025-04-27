@@ -15,24 +15,33 @@
   <div id="controls">
     <label>
       Angle (Fraction Denominator):
-      <input type="number" id="angle" step="any" placeholder="e.g., 4 for 1/4 circle" />
+      <input type="number" id="angle" step="1" placeholder="e.g., 4 for 1/4 circle" />
     </label>
     <label>
       Number of lines:
-      <input type="number" id="lines" step="10" placeholder="e.g., 4" value="20" />
+      <input type="number" id="lines" step="100" placeholder="e.g., 4" value="100" />
     </label>
     <label>
       Line length (px):
-      <input type="number" id="length" step="50" placeholder="e.g., 100" value="400" />
+      <input type="number" id="length" step="50" placeholder="e.g., 100" value="500" />
     </label>
     <label>
       Delay (ms):
-      <input type="number" id="delay" step="10" placeholder="e.g., 50" value="50" />
+      <input type="number" id="delay" step="5" placeholder="e.g., 50" value="10" />
     </label>
     <button id="draw-btn">Draw</button>
     <button id="reset-btn">Reset</button>
   </div>
   <canvas id="canvas" width="1000" height="1000" style="border:1px solid #000;"></canvas>
+
+  <div id="key-info" style="margin-top: 10px; font-size: 0.9em; color: #555;">
+    <strong>Keyboard Shortcuts:</strong>
+    <ul>
+      <li>Press <strong>Enter</strong> in any input field to start drawing.</li>
+      <li>Press <strong>Escape</strong> while drawing to stop.</li>
+    </ul>
+  </div>
+
   <!-- Reference compiled JavaScript output from script.ts -->
   <script src="script.js"></script>
 </body>

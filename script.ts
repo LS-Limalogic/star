@@ -32,6 +32,9 @@ const resetBtn = document.getElementById('reset-btn') as HTMLButtonElement;
 // --- Constants ---
 const DEFAULT_DELAY_MS = 50;
 
+// --- State ---
+let stopDrawingRequested = false;
+
 // --- Interfaces ---
 interface DrawingSettings {
   angleValue: number;
@@ -67,6 +70,7 @@ function getAndValidateSettings(): DrawingSettings | null {
 }
 
 async function drawPattern(ctx: CanvasRenderingContext2D, settings: DrawingSettings): Promise<void> {
+  stopDrawingRequested = false; // Reset flag at the start of drawing
   const { angleValue, lines, length, delayMs, startX, startY } = settings;
   const angleStep = Math.PI - ((2 * Math.PI) / angleValue);
   let x = startX;
@@ -79,6 +83,10 @@ async function drawPattern(ctx: CanvasRenderingContext2D, settings: DrawingSetti
   ctx.moveTo(x, y);
 
   for (let i = 0; i < lines; i++) {
+    if (stopDrawingRequested) {
+      console.log("Drawing stopped by user.");
+      break; // Exit the loop if stop is requested
+    }
     x += length * Math.cos(currentAngle);
     y += length * Math.sin(currentAngle);
     ctx.lineTo(x, y);
@@ -89,7 +97,8 @@ async function drawPattern(ctx: CanvasRenderingContext2D, settings: DrawingSetti
     await delay(delayMs);
   }
 
-  ctx.globalAlpha = 1.0; // Reset alpha
+  ctx.globalAlpha = 1.0; // Reset alpha regardless of completion
+  stopDrawingRequested = false; // Ensure flag is reset if loop completed normally
 }
 
 // --- Event Listeners ---
@@ -100,7 +109,6 @@ if (!ctx) {
 drawBtn.addEventListener('click', async () => {
   const settings = getAndValidateSettings();
   if (settings && ctx) {
-    // Disable button while drawing?
     drawBtn.disabled = true;
     await drawPattern(ctx, settings);
     drawBtn.disabled = false;
@@ -126,4 +134,11 @@ inputs.forEach(input => {
       drawBtn.click(); // Simulate click on the draw button
     }
   });
+});
+
+// --- Global Listener for Escape Key ---
+document.addEventListener('keydown', (event) => {
+  if (event.key === 'Escape' && drawBtn.disabled) { // Check if drawing is in progress (button is disabled)
+    stopDrawingRequested = true;
+  }
 });

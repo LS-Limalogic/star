@@ -35,6 +35,8 @@ const drawBtn = document.getElementById('draw-btn');
 const resetBtn = document.getElementById('reset-btn');
 // --- Constants ---
 const DEFAULT_DELAY_MS = 50;
+// --- State ---
+let stopDrawingRequested = false;
 // --- Utility Functions ---
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
 function getAndValidateSettings() {
@@ -57,6 +59,7 @@ function getAndValidateSettings() {
 }
 function drawPattern(ctx, settings) {
     return __awaiter(this, void 0, void 0, function* () {
+        stopDrawingRequested = false; // Reset flag at the start of drawing
         const { angleValue, lines, length, delayMs, startX, startY } = settings;
         const angleStep = Math.PI - ((2 * Math.PI) / angleValue);
         let x = startX;
@@ -67,6 +70,10 @@ function drawPattern(ctx, settings) {
         ctx.beginPath();
         ctx.moveTo(x, y);
         for (let i = 0; i < lines; i++) {
+            if (stopDrawingRequested) {
+                console.log("Drawing stopped by user.");
+                break; // Exit the loop if stop is requested
+            }
             x += length * Math.cos(currentAngle);
             y += length * Math.sin(currentAngle);
             ctx.lineTo(x, y);
@@ -76,7 +83,8 @@ function drawPattern(ctx, settings) {
             ctx.moveTo(x, y);
             yield delay(delayMs);
         }
-        ctx.globalAlpha = 1.0; // Reset alpha
+        ctx.globalAlpha = 1.0; // Reset alpha regardless of completion
+        stopDrawingRequested = false; // Ensure flag is reset if loop completed normally
     });
 }
 // --- Event Listeners ---
@@ -86,7 +94,6 @@ if (!ctx) {
 drawBtn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, function* () {
     const settings = getAndValidateSettings();
     if (settings && ctx) {
-        // Disable button while drawing?
         drawBtn.disabled = true;
         yield drawPattern(ctx, settings);
         drawBtn.disabled = false;
@@ -111,4 +118,10 @@ inputs.forEach(input => {
             drawBtn.click(); // Simulate click on the draw button
         }
     });
+});
+// --- Global Listener for Escape Key ---
+document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && drawBtn.disabled) { // Check if drawing is in progress (button is disabled)
+        stopDrawingRequested = true;
+    }
 });
