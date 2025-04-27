@@ -27,6 +27,9 @@ if (ctx) {
 }
 // --- End High-DPI Scaling ---
 // --- DOM Elements ---
+const angleModeFractionRadio = document.getElementById('angleModeFraction');
+const angleModeListRadio = document.getElementById('angleModeList');
+const angleLabel = document.getElementById('angleLabel');
 const angleInput = document.getElementById('angle');
 const linesInput = document.getElementById('lines');
 const lengthInput = document.getElementById('length');
@@ -37,60 +40,144 @@ const resetBtn = document.getElementById('reset-btn');
 const DEFAULT_DELAY_MS = 50;
 // --- State ---
 let stopDrawingRequested = false;
+// --- Enums ---
+var AngleMode;
+(function (AngleMode) {
+    AngleMode["Fraction"] = "fraction";
+    AngleMode["List"] = "list";
+})(AngleMode || (AngleMode = {}));
 // --- Utility Functions ---
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
+// Helper to convert degrees to radians
+const degToRad = (degrees) => degrees * (Math.PI / 180);
 function getAndValidateSettings() {
-    const angleValue = parseFloat(angleInput.value);
+    const modeValue = document.querySelector('input[name="angleMode"]:checked').value;
+    const mode = modeValue === AngleMode.List ? AngleMode.List : AngleMode.Fraction;
     const lines = parseInt(linesInput.value, 10);
     const length = parseFloat(lengthInput.value);
     const delayMs = parseInt(delayInput.value, 10);
-    if (isNaN(angleValue) || isNaN(lines) || isNaN(length) || angleValue === 0 || isNaN(delayMs) || delayMs < 0) {
-        alert('Please enter valid numbers for angle (non-zero), lines, length, and delay (non-negative).');
+    let angleValue = undefined;
+    let angleSteps = undefined;
+    let commonValidationFailed = isNaN(lines) || isNaN(length) || isNaN(delayMs) || delayMs < 0;
+    let angleValidationError = '';
+    if (mode === AngleMode.Fraction) {
+        angleValue = parseFloat(angleInput.value);
+        if (isNaN(angleValue) || angleValue === 0) {
+            angleValidationError = 'Invalid Fraction Denominator (must be non-zero number).';
+        }
+    }
+    else { // mode === AngleMode.List
+        const angleString = angleInput.value;
+        try {
+            angleSteps = angleString.split(';')
+                .map(s => s.trim())
+                .filter(s => s !== '') // Allow trailing commas or empty segments
+                .map(s => {
+                const deg = parseFloat(s);
+                if (isNaN(deg))
+                    throw new Error('Invalid number in list');
+                return degToRad(180 - deg);
+            });
+            if (angleSteps.length === 0) {
+                throw new Error('Angle list cannot be empty');
+            }
+        }
+        catch (e) {
+            angleValidationError = `Invalid Angle List: ${e.message || 'Please use comma-separated numbers.'}`;
+        }
+    }
+    if (commonValidationFailed || angleValidationError) {
+        let alertMessage = 'Invalid input:\n';
+        if (commonValidationFailed) {
+            alertMessage += '- Check Lines, Length, Delay (must be valid numbers, delay >= 0).\n';
+        }
+        if (angleValidationError) {
+            alertMessage += `- ${angleValidationError}\n`;
+        }
+        alert(alertMessage.trim());
         return null;
     }
     return {
+        mode,
         angleValue,
+        angleSteps,
         lines,
         length,
         delayMs,
-        startX: cssWidth / 4, // Initial position remains configurable here if needed
+        startX: cssWidth / 4,
         startY: cssHeight / 2,
     };
 }
 function drawPattern(ctx, settings) {
     return __awaiter(this, void 0, void 0, function* () {
-        stopDrawingRequested = false; // Reset flag at the start of drawing
-        const { angleValue, lines, length, delayMs, startX, startY } = settings;
-        const angleStep = Math.PI - ((2 * Math.PI) / angleValue);
+        stopDrawingRequested = false;
+        const { mode, angleValue, angleSteps, lines, length, delayMs, startX, startY } = settings;
         let x = startX;
         let y = startY;
         let currentAngle = 0;
-        ctx.clearRect(0, 0, cssWidth, cssHeight); // Clear canvas at the start of drawing
-        ctx.globalAlpha = 0.25; // Set transparency
+        // Determine angle step calculation based on mode
+        let getAngleStep;
+        if (mode === AngleMode.Fraction && angleValue) {
+            const fixedAngleStep = Math.PI - ((2 * Math.PI) / angleValue);
+            getAngleStep = () => fixedAngleStep;
+        }
+        else if (mode === AngleMode.List && angleSteps && angleSteps.length > 0) {
+            getAngleStep = (index) => angleSteps[index % angleSteps.length];
+        }
+        else {
+            console.error("Invalid settings passed to drawPattern");
+            return; // Should not happen if validation is correct
+        }
+        ctx.clearRect(0, 0, cssWidth, cssHeight);
+        ctx.globalAlpha = 0.25;
         ctx.beginPath();
         ctx.moveTo(x, y);
         for (let i = 0; i < lines; i++) {
             if (stopDrawingRequested) {
                 console.log("Drawing stopped by user.");
-                break; // Exit the loop if stop is requested
+                break;
             }
+            const angleStep = getAngleStep(i); // Get the angle step for this line
             x += length * Math.cos(currentAngle);
             y += length * Math.sin(currentAngle);
             ctx.lineTo(x, y);
-            currentAngle += angleStep;
+            currentAngle += angleStep; // Update current angle
             ctx.stroke();
-            ctx.beginPath(); // Start new path for the next segment to allow delay visibility
+            ctx.beginPath();
             ctx.moveTo(x, y);
             yield delay(delayMs);
         }
-        ctx.globalAlpha = 1.0; // Reset alpha regardless of completion
-        stopDrawingRequested = false; // Ensure flag is reset if loop completed normally
+        ctx.globalAlpha = 1.0;
+        stopDrawingRequested = false;
     });
+}
+// --- UI Update Functions ---
+function updateAngleInputLabel() {
+    const mode = angleModeListRadio.checked ? AngleMode.List : AngleMode.Fraction;
+    if (mode === AngleMode.List) {
+        angleLabel.firstChild.textContent = 'Angles (semicolon-sep degrees): ';
+        angleInput.type = 'text';
+        angleInput.placeholder = 'e.g., 90; 30; 60';
+        angleInput.step = '';
+        angleInput.value = '';
+    }
+    else {
+        angleLabel.firstChild.textContent = 'Angle (Fraction Denominator): ';
+        angleInput.type = 'number';
+        angleInput.placeholder = 'e.g., 4 for 1/4 circle';
+        angleInput.step = 'any';
+        angleInput.value = '';
+    }
 }
 // --- Event Listeners ---
 if (!ctx) {
     throw new Error('Canvas rendering context not available');
 }
+// Add listeners for mode change
+angleModeFractionRadio.addEventListener('change', updateAngleInputLabel);
+angleModeListRadio.addEventListener('change', updateAngleInputLabel);
+// Initial UI setup based on default checked state
+updateAngleInputLabel();
 drawBtn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, function* () {
     const settings = getAndValidateSettings();
     if (settings && ctx) {

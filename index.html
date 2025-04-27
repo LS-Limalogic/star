@@ -13,9 +13,15 @@
 </head>
 <body>
   <div id="controls">
-    <label>
+    <h2>Bytetile's stars</h2>
+    <label style="display: block; margin-bottom: 5px;">
+      Mode:
+      <input type="radio" id="angleModeFraction" name="angleMode" value="fraction" checked> Fraction Denominator
+      <input type="radio" id="angleModeList" name="angleMode" value="list"> Angle List (degrees)
+    </label>
+    <label id="angleLabel">
       Angle (Fraction Denominator):
-      <input type="number" id="angle" step="1" placeholder="e.g., 4 for 1/4 circle" />
+      <input type="number" id="angle" step="any" placeholder="e.g., 4 for 1/4 circle" />
     </label>
     <label>
       Number of lines:
