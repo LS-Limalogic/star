@@ -38,6 +38,7 @@ const drawBtn = document.getElementById('draw-btn');
 const resetBtn = document.getElementById('reset-btn');
 // --- Constants ---
 const DEFAULT_DELAY_MS = 50;
+const MARGIN = 20; // Margin around the drawing
 // --- State ---
 let stopDrawingRequested = false;
 // --- Enums ---
@@ -108,13 +109,18 @@ function getAndValidateSettings() {
         startY: cssHeight / 2,
     };
 }
-function drawPattern(ctx, settings) {
-    return __awaiter(this, void 0, void 0, function* () {
-        stopDrawingRequested = false;
+function drawPattern(ctx_1, settings_1) {
+    return __awaiter(this, arguments, void 0, function* (ctx, settings, options = {}) {
+        if (!options.simulate) {
+            stopDrawingRequested = false;
+        }
         const { mode, angleValue, angleSteps, lines, length, delayMs, startX, startY } = settings;
+        // Start position remains as defined in settings for the core logic
         let x = startX;
         let y = startY;
         let currentAngle = 0;
+        // Bounds tracking for simulation
+        let minX = x, maxX = x, minY = y, maxY = y;
         // Determine angle step calculation based on mode
         let getAngleStep;
         if (mode === AngleMode.Fraction && angleValue) {
@@ -128,27 +134,73 @@ function drawPattern(ctx, settings) {
             console.error("Invalid settings passed to drawPattern");
             return; // Should not happen if validation is correct
         }
-        ctx.clearRect(0, 0, cssWidth, cssHeight);
-        ctx.globalAlpha = 0.25;
-        ctx.beginPath();
-        ctx.moveTo(x, y);
+        if (!getAngleStep) { /* handle error */
+            return;
+        }
+        // --- Context Transform for Actual Drawing ---
+        if (!options.simulate && options.scaleFactor && options.bounds) {
+            ctx.clearRect(0, 0, cssWidth, cssHeight);
+            ctx.save();
+            const bounds = options.bounds;
+            const scaleFactor = options.scaleFactor;
+            const patternWidth = bounds.maxX - bounds.minX;
+            const patternHeight = bounds.maxY - bounds.minY;
+            const patternCenterX = bounds.minX + patternWidth / 2;
+            const patternCenterY = bounds.minY + patternHeight / 2;
+            // Center scaled drawing within the canvas
+            ctx.translate(cssWidth / 2, cssHeight / 2);
+            ctx.scale(scaleFactor, scaleFactor);
+            ctx.translate(-patternCenterX, -patternCenterY);
+            // Set visual properties after transform
+            ctx.globalAlpha = 0.25;
+            ctx.beginPath();
+            ctx.moveTo(x, y); // Start drawing from the original start point
+        }
+        else if (options.simulate) {
+            // Reset bounds for simulation run (important!)
+            minX = x;
+            maxX = x;
+            minY = y;
+            maxY = y;
+        }
+        // ----------------------------------------
         for (let i = 0; i < lines; i++) {
-            if (stopDrawingRequested) {
+            if (!options.simulate && stopDrawingRequested) {
                 console.log("Drawing stopped by user.");
                 break;
             }
-            const angleStep = getAngleStep(i); // Get the angle step for this line
+            const angleStep = getAngleStep(i);
             x += length * Math.cos(currentAngle);
             y += length * Math.sin(currentAngle);
-            ctx.lineTo(x, y);
-            currentAngle += angleStep; // Update current angle
-            ctx.stroke();
-            ctx.beginPath();
-            ctx.moveTo(x, y);
-            yield delay(delayMs);
+            currentAngle += angleStep;
+            if (options.simulate) {
+                // Update bounds during simulation
+                minX = Math.min(minX, x);
+                maxX = Math.max(maxX, x);
+                minY = Math.min(minY, y);
+                maxY = Math.max(maxY, y);
+            }
+            else {
+                // Actual drawing logic (no offset needed, transform handles it)
+                ctx.lineTo(x, y);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(x, y);
+                yield delay(delayMs);
+            }
         }
-        ctx.globalAlpha = 1.0;
-        stopDrawingRequested = false;
+        if (options.simulate) {
+            return { minX, maxX, minY, maxY };
+        }
+        else {
+            // Restore context if it was saved
+            if (options.scaleFactor && options.bounds) {
+                ctx.restore();
+            }
+            // Reset flags even if context wasn't saved (e.g., if drawing was stopped before transform)
+            ctx.globalAlpha = 1.0;
+            stopDrawingRequested = false;
+        }
     });
 }
 // --- UI Update Functions ---
@@ -182,7 +234,36 @@ drawBtn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, functi
     const settings = getAndValidateSettings();
     if (settings && ctx) {
         drawBtn.disabled = true;
-        yield drawPattern(ctx, settings);
+        // 1. Simulate to get bounds
+        const bounds = yield drawPattern(ctx, settings, { simulate: true });
+        if (bounds) {
+            // 2. Calculate scale factor
+            const patternWidth = bounds.maxX - bounds.minX;
+            const patternHeight = bounds.maxY - bounds.minY;
+            const availableWidth = cssWidth - 2 * MARGIN;
+            const availableHeight = cssHeight - 2 * MARGIN;
+            let scaleFactor = 1;
+            if (patternWidth > 0 && patternHeight > 0) { // Avoid division by zero
+                const scaleFactorX = availableWidth / patternWidth;
+                const scaleFactorY = availableHeight / patternHeight;
+                scaleFactor = Math.min(1, scaleFactorX, scaleFactorY); // Don't scale up
+            }
+            else if (patternWidth > 0) {
+                scaleFactor = Math.min(1, availableWidth / patternWidth);
+            }
+            else if (patternHeight > 0) {
+                scaleFactor = Math.min(1, availableHeight / patternHeight);
+            }
+            // If patternWidth and patternHeight are 0, scaleFactor remains 1
+            // 3. Draw for real with scale factor and bounds for transform
+            if (!stopDrawingRequested) {
+                yield drawPattern(ctx, settings, { scaleFactor: scaleFactor, bounds: bounds });
+            }
+        }
+        else {
+            // Handle case where simulation failed or was stopped (optional)
+            console.log("Simulation did not complete, skipping final draw.");
+        }
         drawBtn.disabled = false;
     }
 }));
