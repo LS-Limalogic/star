@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Line Drawer</title>
+  <style>
+    body { font-family: Arial, sans-serif; margin: 20px; }
+    #controls { margin-bottom: 10px; }
+    label { margin-right: 10px; }
+  </style>
+</head>
+<body>
+  <div id="controls">
+    <label>
+      Angle (in π units):
+      <input type="number" id="angle" step="any" placeholder="e.g., 0.5" />
+    </label>
+    <label>
+      Number of lines:
+      <input type="number" id="lines" placeholder="e.g., 4" />
+    </label>
+    <label>
+      Line length (px):
+      <input type="number" id="length" step="any" placeholder="e.g., 100" />
+    </label>
+    <button id="draw-btn">Draw</button>
+    <button id="reset-btn">Reset</button>
+  </div>
+  <canvas id="canvas" width="1000" height="1000" style="border:1px solid #000;"></canvas>
+  <!-- Reference compiled JavaScript output from script.ts -->
+  <script src="script.js"></script>
+</body>
+</html>
