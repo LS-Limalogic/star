@@ -4,8 +4,8 @@ module.exports = {
   testEnvironment: 'jsdom', // Use jsdom for DOM environment simulation
   // Optional: Automatically clear mock calls, instances, contexts and results before every test
   clearMocks: true,
-  // Optional: Setup files to run before test files
-  // setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
+  // Run setup file before tests
+  setupFilesAfterEnv: ['<rootDir>/src/setupTests.ts'],
   moduleNameMapper: {
     // Handle module paths, especially if you have aliases or non-relative paths
     // Example: Map paths defined in tsconfig.json if you use them
