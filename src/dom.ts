@@ -1,6 +1,6 @@
 // src/dom.ts
 
-function getElementByIdOrThrow<T extends HTMLElement>(id: string): T {
+export function getElementByIdOrThrow<T extends HTMLElement>(id: string): T {
   const element = document.getElementById(id);
   if (!element) {
     throw new Error(`DOM element with id '${id}' not found.`);
@@ -42,5 +42,12 @@ export const saveSettingsBtn = getElementByIdOrThrow<HTMLButtonElement>('save-se
 export const savedSettingsList = getElementByIdOrThrow<HTMLSelectElement>('saved-settings-list');
 export const deleteSelectedBtn = getElementByIdOrThrow<HTMLButtonElement>('delete-selected-btn');
 export const themeToggleBtn = getElementByIdOrThrow<HTMLButtonElement>('theme-toggle');
+export const notificationArea = getElementByIdOrThrow<HTMLDivElement>('notification-area');
+
+// Delete Prompt Elements
+export const deletePromptBackdrop = getElementByIdOrThrow<HTMLDivElement>('delete-prompt-backdrop');
+export const deletePromptMessage = getElementByIdOrThrow<HTMLParagraphElement>('delete-prompt-message');
+export const deletePromptConfirmBtn = getElementByIdOrThrow<HTMLButtonElement>('delete-prompt-confirm');
+export const deletePromptCancelBtn = getElementByIdOrThrow<HTMLButtonElement>('delete-prompt-cancel');
 
 export const allInputElements = [angleInput, linesInput, lengthInput, delayInput]; 

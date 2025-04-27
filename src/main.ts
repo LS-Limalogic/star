@@ -3,7 +3,13 @@ import {
     drawBtn, resetBtn, downloadBtn, allInputElements,
     angleInput, linesInput, lengthInput, delayInput,
     cssWidth, cssHeight, saveSettingsBtn, savedSettingsList, deleteSelectedBtn,
-    themeToggleBtn // <-- Add theme toggle button
+    themeToggleBtn,
+    notificationArea,
+    // Import delete prompt elements
+    deletePromptBackdrop,
+    deletePromptMessage,
+    deletePromptConfirmBtn,
+    deletePromptCancelBtn
 } from './dom.js';
 import {
     updateAngleInputLabel, getAndValidateSettings, resetInputs,
@@ -16,9 +22,80 @@ import { DrawingBounds, StoredSettings, NamedSetting } from './types.js'; // Imp
 import { MARGIN, AngleMode } from './config.js'; // Import AngleMode
 import { loadAllSavedSettings, saveNamedSetting, deleteSavedSetting } from './utils.js'; // Import storage functions
 import { format } from 'date-fns'; // Import format from date-fns
+import { getElementByIdOrThrow } from './dom.js'; // Import the helper
 
 // --- Global State (Keep track of loaded settings) ---
 let allSavedSettings: NamedSetting[] = [];
+let notificationTimeout: number | null = null; // Keep track of timeout
+let settingIdToDelete: number | null = null; // Store ID for delete prompt
+
+// --- Notification Helper ---
+function showNotification(message: string, duration: number = 3000) {
+    if (notificationTimeout) {
+        clearTimeout(notificationTimeout); // Clear previous timeout if any
+    }
+    notificationArea.textContent = message;
+    notificationArea.classList.remove('opacity-0');
+    notificationArea.classList.add('opacity-100');
+
+    notificationTimeout = window.setTimeout(() => {
+        notificationArea.classList.remove('opacity-100');
+        notificationArea.classList.add('opacity-0');
+        notificationTimeout = null;
+    }, duration);
+}
+
+// --- Delete Prompt Logic ---
+function hideDeletePrompt() {
+    settingIdToDelete = null;
+    deletePromptBackdrop.classList.add('hidden');
+    document.removeEventListener('keydown', handleEscapeKey);
+    // Clone the nodes using the original imported references to remove listeners
+    const cleanConfirmBtn = deletePromptConfirmBtn.cloneNode(true);
+    deletePromptConfirmBtn.parentNode?.replaceChild(cleanConfirmBtn, deletePromptConfirmBtn);
+    const cleanCancelBtn = deletePromptCancelBtn.cloneNode(true);
+    deletePromptCancelBtn.parentNode?.replaceChild(cleanCancelBtn, deletePromptCancelBtn);
+}
+
+function showDeletePrompt(settingId: number, settingName: string) {
+    settingIdToDelete = settingId;
+    deletePromptMessage.textContent = `Are you sure you want to delete ${settingName}? This action cannot be undone.`;
+    deletePromptBackdrop.classList.remove('hidden');
+
+    // Re-fetch the potentially new button elements from DOM using the imported helper
+    const currentConfirmBtn = getElementByIdOrThrow<HTMLButtonElement>('delete-prompt-confirm');
+    const currentCancelBtn = getElementByIdOrThrow<HTMLButtonElement>('delete-prompt-cancel');
+
+    currentConfirmBtn.addEventListener('click', handleDeleteConfirm);
+    currentCancelBtn.addEventListener('click', hideDeletePrompt);
+
+    deletePromptBackdrop.addEventListener('click', handleBackdropClick);
+    document.addEventListener('keydown', handleEscapeKey);
+}
+
+// Separate backdrop click handler for clarity
+function handleBackdropClick(event: MouseEvent) {
+    if (event.target === deletePromptBackdrop) {
+        hideDeletePrompt();
+    }
+}
+
+function handleDeleteConfirm() {
+    if (settingIdToDelete !== null) {
+        allSavedSettings = deleteSavedSetting(settingIdToDelete);
+        populateSavedSettingsList(allSavedSettings);
+        console.log("Deleted setting with ID:", settingIdToDelete);
+        showNotification("Setting deleted!");
+        hideDeletePrompt();
+    }
+}
+
+function handleEscapeKey(event: KeyboardEvent) {
+    if (event.key === 'Escape' && !deletePromptBackdrop.classList.contains('hidden')) {
+        hideDeletePrompt();
+        // Listener removed in hideDeletePrompt
+    }
+}
 
 // --- Theme Setup ---
 const applyTheme = (theme: 'light' | 'dark') => {
@@ -175,6 +252,7 @@ saveSettingsBtn.addEventListener('click', () => {
     allSavedSettings = saveNamedSetting(newSetting);
     populateSavedSettingsList(allSavedSettings);
     console.log("Saved new setting:", newSetting);
+    showNotification("Settings saved!"); // <-- Show notification
 });
 
 // Load settings instantly on dropdown change
@@ -196,16 +274,16 @@ savedSettingsList.addEventListener('change', () => {
     }
 });
 
-// Delete Selected Button - Listener remains, but enabling/disabling is handled by dropdown change
+// Delete Selected Button - Modified to use custom prompt
 deleteSelectedBtn.addEventListener('click', () => {
     const selectedId = parseInt(savedSettingsList.value, 10);
     if (isNaN(selectedId)) return;
 
-    if (confirm(`Are you sure you want to delete the setting saved at ${new Date(selectedId).toLocaleString()}?`)) {
-        allSavedSettings = deleteSavedSetting(selectedId);
-        populateSavedSettingsList(allSavedSettings); // Refresh list (also handles button state)
-        console.log("Deleted setting with ID:", selectedId);
-    }
+    const settingToDelete = allSavedSettings.find(s => s.id === selectedId);
+    const settingName = settingToDelete ? `"${settingToDelete.name}"` : `setting saved at ${new Date(selectedId).toLocaleString()}`;
+
+    // Show the custom prompt instead of confirm()
+    showDeletePrompt(selectedId, settingName);
 });
 
 // Reset button
