@@ -14,8 +14,8 @@
 <body>
   <div id="controls">
     <label>
-      Angle (in π units):
-      <input type="number" id="angle" step="0.01" placeholder="e.g., 0.5" />
+      Angle (Fraction Denominator):
+      <input type="number" id="angle" step="any" placeholder="e.g., 4 for 1/4 circle" />
     </label>
     <label>
       Number of lines:
@@ -24,6 +24,10 @@
     <label>
       Line length (px):
       <input type="number" id="length" step="50" placeholder="e.g., 100" value="400" />
+    </label>
+    <label>
+      Delay (ms):
+      <input type="number" id="delay" step="10" placeholder="e.g., 50" value="50" />
     </label>
     <button id="draw-btn">Draw</button>
     <button id="reset-btn">Reset</button>

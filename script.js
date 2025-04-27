@@ -29,6 +29,7 @@ if (ctx) {
 const angleInput = document.getElementById('angle');
 const linesInput = document.getElementById('lines');
 const lengthInput = document.getElementById('length');
+const delayInput = document.getElementById('delay');
 const drawBtn = document.getElementById('draw-btn');
 const resetBtn = document.getElementById('reset-btn');
 if (!ctx) {
@@ -38,16 +39,19 @@ if (!ctx) {
 const delay = (ms) => new Promise(res => setTimeout(res, ms));
 drawBtn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, function* () {
     ctx.clearRect(0, 0, cssWidth, cssHeight);
-    const anglePi = parseFloat(angleInput.value);
+    // Set line transparency (25% transparent = 75% opaque)
+    ctx.globalAlpha = 0.25;
+    const angleValue = parseFloat(angleInput.value);
     const lines = parseInt(linesInput.value, 10);
     const length = parseFloat(lengthInput.value);
-    if (isNaN(anglePi) || isNaN(lines) || isNaN(length)) {
-        alert('Please enter valid numbers for angle, lines, and length.');
+    const delayMs = parseInt(delayInput.value, 10);
+    if (isNaN(angleValue) || isNaN(lines) || isNaN(length) || angleValue === 0 || isNaN(delayMs) || delayMs < 0) {
+        alert('Please enter valid numbers for angle (non-zero), lines, length, and delay (non-negative).');
         return;
     }
-    const angleStep = (1 - anglePi) * Math.PI;
+    const angleStep = Math.PI - ((2 * Math.PI) / angleValue);
     let x = cssWidth / 4;
-    let y = cssHeight / 4;
+    let y = cssHeight / 2;
     let currentAngle = 0;
     ctx.beginPath();
     ctx.moveTo(x, y);
@@ -59,12 +63,15 @@ drawBtn.addEventListener('click', () => __awaiter(void 0, void 0, void 0, functi
         ctx.stroke();
         ctx.beginPath();
         ctx.moveTo(x, y);
-        yield delay(100);
+        yield delay(delayMs);
     }
+    // Reset alpha to default (optional, good practice)
+    ctx.globalAlpha = 1.0;
 }));
 resetBtn.addEventListener('click', () => {
     ctx.clearRect(0, 0, cssWidth, cssHeight);
     angleInput.value = '';
     linesInput.value = '';
     lengthInput.value = '';
+    delayInput.value = '50';
 });
