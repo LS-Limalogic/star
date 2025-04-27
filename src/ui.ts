@@ -1,8 +1,9 @@
 import { AngleMode, DEFAULT_DELAY_MS } from './config.js';
-import { DrawingSettings, DrawingBounds } from './types.js';
+import { DrawingSettings, DrawingBounds, StoredSettings } from './types.js';
 import { degToRad } from './utils.js';
 import { 
-    angleModeListRadio, angleLabel, angleInput, 
+    angleModeFractionRadio, angleModeListRadio,
+    angleLabel, angleInput, 
     linesInput, lengthInput, delayInput, 
     ctx, cssWidth, cssHeight
 } from './dom.js';
@@ -14,13 +15,11 @@ export function updateAngleInputLabel() {
         angleInput.type = 'text';
         angleInput.placeholder = 'e.g., 90; 30; 60';
         angleInput.step = '';
-        angleInput.value = '';
     } else {
         angleLabel.firstChild!.textContent = 'Angle (Fraction Denominator): ';
         angleInput.type = 'number';
         angleInput.placeholder = 'e.g., 4 for 1/4 circle';
         angleInput.step = 'any';
-        angleInput.value = '';
     }
 }
 
@@ -96,4 +95,22 @@ export function resetInputs() {
     if (angleModeListRadio.checked) {
         angleInput.value = ''; 
     }
+}
+
+export function applyStoredSettings(settings: StoredSettings): void {
+    // 1. Set mode radio button FIRST
+    if (settings.mode === AngleMode.List) {
+        angleModeListRadio.checked = true;
+    } else {
+        angleModeFractionRadio.checked = true; // Default to fraction if not list
+    }
+
+    // 2. Update label and input type based on the *just set* mode
+    updateAngleInputLabel();
+
+    // 3. Set input values AFTER type has been set correctly
+    angleInput.value = settings.angle;
+    linesInput.value = settings.lines;
+    lengthInput.value = settings.length;
+    delayInput.value = settings.delay;
 } 

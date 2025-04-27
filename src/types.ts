@@ -22,4 +22,13 @@ export interface DrawOptions {
   simulate?: boolean;
   scaleFactor?: number;
   bounds?: DrawingBounds;
+}
+
+// Interface for the raw data stored in localStorage
+export interface StoredSettings {
+  mode: string; // Store mode value ('fraction' or 'list')
+  angle: string;
+  lines: string;
+  length: string;
+  delay: string;
 } 

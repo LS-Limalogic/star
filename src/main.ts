@@ -1,23 +1,35 @@
 import {
     canvas, ctx, angleModeFractionRadio, angleModeListRadio,
     drawBtn, resetBtn, downloadBtn, allInputElements,
+    angleInput, linesInput, lengthInput, delayInput,
     cssWidth, cssHeight // Import dimensions if needed for reset logic etc.
 } from './dom.js';
 import {
-    updateAngleInputLabel, getAndValidateSettings, resetInputs
+    updateAngleInputLabel, getAndValidateSettings, resetInputs,
+    applyStoredSettings // Import apply function
 } from './ui.js';
 import {
     drawPattern, requestStopDrawing
 } from './drawing.js';
-import { DrawingBounds } from './types.js';
+import { DrawingBounds, StoredSettings } from './types.js'; // Import StoredSettings
 import { MARGIN } from './config.js';
+import { loadSettings, saveSettings } from './utils.js'; // Import storage functions
 
 // --- Initial Setup ---
 if (!ctx) {
     // The check in dom.ts should have already thrown, but belts and suspenders
     throw new Error("Canvas context failed to initialize.");
 }
-updateAngleInputLabel(); // Set initial label state
+
+// Load settings from localStorage
+const loadedSettings = loadSettings();
+if (loadedSettings) {
+    console.log("Loaded settings from localStorage:", loadedSettings);
+    applyStoredSettings(loadedSettings);
+} else {
+    console.log("No valid settings found, using defaults.");
+    updateAngleInputLabel(); // Set initial label state based on default HTML checked state
+}
 
 // --- Event Listeners ---
 
@@ -32,6 +44,17 @@ drawBtn.addEventListener('click', async () => {
     console.log("Settings:", settings); // Log 2: Settings object
 
     if (settings && ctx) {
+        // Save the *current* input values on successful validation/draw start
+        const currentInputs: StoredSettings = {
+            mode: (document.querySelector('input[name="angleMode"]:checked') as HTMLInputElement).value,
+            angle: angleInput.value,
+            lines: linesInput.value,
+            length: lengthInput.value,
+            delay: delayInput.value,
+        };
+        saveSettings(currentInputs);
+        console.log("Saved current settings:", currentInputs); // Log saved settings
+
         drawBtn.disabled = true;
         downloadBtn.disabled = true;
         console.log("Starting simulation..."); // Log 3: Starting simulation
