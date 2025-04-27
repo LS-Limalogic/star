@@ -192,18 +192,19 @@ downloadBtn.addEventListener('click', () => {
     document.body.removeChild(link);
 });
 
-// Enter key in inputs
-allInputElements.forEach(input => {
-    input.addEventListener('keydown', (event) => {
-        if (event.key === 'Enter') {
-            event.preventDefault();
+// Add global Enter key listener
+document.addEventListener('keydown', (event) => {
+    // Trigger draw on Enter, but not if already drawing or if focus is on a button (to allow button activation)
+    if (event.key === 'Enter' && !drawBtn.disabled) {
+        // Check if the active element is a button, if so, let the default action occur
+        if (!(document.activeElement instanceof HTMLButtonElement)) {
+             // Prevent default action (like form submission if inputs were in a form)
+            event.preventDefault(); 
+            console.log("Global Enter key pressed, triggering draw..."); // Optional log
             drawBtn.click();
         }
-    });
-});
-
-// Escape key to stop drawing
-document.addEventListener('keydown', (event) => {
+    }
+    
     if (event.key === 'Escape' && drawBtn.disabled) {
         requestStopDrawing();
     }
