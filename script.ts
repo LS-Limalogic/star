@@ -1,5 +1,26 @@
 const canvas = document.getElementById('canvas') as HTMLCanvasElement;
 const ctx = canvas.getContext('2d');
+
+// --- High-DPI Canvas Scaling --- 
+const dpr = window.devicePixelRatio || 1;
+// Get size from HTML attributes (our desired CSS size)
+const cssWidth = canvas.width; 
+const cssHeight = canvas.height;
+
+// Set the drawing buffer size based on DPR
+canvas.width = cssWidth * dpr;
+canvas.height = cssHeight * dpr;
+
+// Set the display size using CSS
+canvas.style.width = `${cssWidth}px`;
+canvas.style.height = `${cssHeight}px`;
+
+// Scale the context to account for the higher resolution buffer
+if (ctx) { 
+  ctx.scale(dpr, dpr);
+}
+// --- End High-DPI Scaling ---
+
 const angleInput = document.getElementById('angle') as HTMLInputElement;
 const linesInput = document.getElementById('lines') as HTMLInputElement;
 const lengthInput = document.getElementById('length') as HTMLInputElement;
@@ -14,7 +35,7 @@ if (!ctx) {
 const delay = (ms: number) => new Promise(res => setTimeout(res, ms));
 
 drawBtn.addEventListener('click', async () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
   const anglePi = parseFloat(angleInput.value);
   const lines = parseInt(linesInput.value, 10);
   const length = parseFloat(lengthInput.value);
@@ -23,8 +44,8 @@ drawBtn.addEventListener('click', async () => {
     return;
   }
   const angleStep = (1 - anglePi) * Math.PI;
-  let x = canvas.width / 2;
-  let y = canvas.height / 2;
+  let x = cssWidth / 2;
+  let y = cssHeight / 2;
   let currentAngle = 0;
   ctx.beginPath();
   ctx.moveTo(x, y);
@@ -41,7 +62,7 @@ drawBtn.addEventListener('click', async () => {
 });
 
 resetBtn.addEventListener('click', () => {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.clearRect(0, 0, cssWidth, cssHeight);
   angleInput.value = '';
   linesInput.value = '';
   lengthInput.value = '';
